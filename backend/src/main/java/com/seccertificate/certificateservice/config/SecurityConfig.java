@@ -58,7 +58,8 @@ public class SecurityConfig {
         // Use allowedOriginPatterns for credentials support
         configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:*",
-            "http://127.0.0.1:*"
+            "http://127.0.0.1:*",
+            "https://spectacular-cucurucho-793843.netlify.app"
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
