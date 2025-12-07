@@ -32,7 +32,8 @@ Your backend is ready to deploy to Render with PostgreSQL database.
    - **Environment:** `Java`
    - **Region:** Same as database
    - **Branch:** `main`
-   - **Build Command:** `./mvnw clean package -DskipTests`
+   - **Root Directory:** `backend`
+   - **Build Command:** `mvn clean package -DskipTests`
    - **Start Command:** `java -jar target/certificate-service-1.0.0.jar`
 4. **Environment Variables:**
    Add these (get database URL from Step 1):
