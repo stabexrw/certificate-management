@@ -1,15 +1,11 @@
 services:
   - type: web
     name: certificate-backend
-    runtime: java
+    runtime: docker
     region: oregon
-    buildCommand: cd backend && mvn clean package -DskipTests
-    startCommand: java -jar backend/target/certificate-service-1.0.0.jar
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
     envVars:
-      - key: JAVA_VERSION
-        value: 17
-      - key: MAVEN_VERSION
-        value: 3.9
       - key: SPRING_PROFILES_ACTIVE
         value: production
       - key: SERVER_PORT

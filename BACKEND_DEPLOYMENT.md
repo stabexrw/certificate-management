@@ -23,18 +23,31 @@ Your backend is ready to deploy to Render with PostgreSQL database.
 
 ## Step 2: Create Web Service for Backend
 
+### Option A: Using render.yaml (Recommended - Easiest)
+
+1. In Render dashboard, click "New +" → "Blueprint"
+2. Connect your GitHub repository
+3. Render automatically detects `render.yaml` and creates:
+   - PostgreSQL database (`certificate-db`)
+   - Docker-based web service (`certificate-backend`)
+4. Wait for database creation (~2 minutes)
+5. Add environment variables (see Step 4 below)
+6. Deploy will start automatically
+
+### Option B: Manual Setup
+
 1. In Render dashboard, click "New +" → "Web Service"
 2. **Connect GitHub:**
    - Click "Connect account" and authorize GitHub
-   - Select `certificate-service` repository
+   - Select `certificate-management` repository
 3. **Configure Build:**
    - **Name:** `certificate-backend`
-   - **Environment:** `Java`
+   - **Environment:** `Docker`
    - **Region:** Same as database
    - **Branch:** `main`
    - **Root Directory:** `backend`
-   - **Build Command:** `mvn clean package -DskipTests`
-   - **Start Command:** `java -jar target/certificate-service-1.0.0.jar`
+   - **Dockerfile Path:** `./Dockerfile`
+   - No build/start commands needed (Docker handles this)
 4. **Environment Variables:**
    Add these (get database URL from Step 1):
    ```
