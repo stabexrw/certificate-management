@@ -44,9 +44,9 @@ Record these values from your provider:
    - **Dockerfile Path:** `./Dockerfile`
    - No build/start commands needed (Docker handles this)
 4. **Environment Variables:**
-   Add these using your external Postgres values (from Supabase/Railway):
+   Add these using your external Postgres values (from Supabase/Railway). Use the **jdbc:** prefix and SSL:
    ```
-   SPRING_DATASOURCE_URL=postgresql://<user>:<password>@<host>:<port>/<database>
+   SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:<port>/<database>?sslmode=require
    SPRING_DATASOURCE_USERNAME=<user>
    SPRING_DATASOURCE_PASSWORD=<password>
    SPRING_JPA_HIBERNATE_DDL_AUTO=update

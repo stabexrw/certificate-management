@@ -13,7 +13,7 @@ services:
         value: 8080
       # Add these from your external Postgres provider (Supabase/Railway):
       # - key: SPRING_DATASOURCE_URL
-      #   value: postgresql://<user>:<password>@<host>:<port>/<database>
+      #   value: jdbc:postgresql://<host>:<port>/<database>?sslmode=require
       # - key: SPRING_DATASOURCE_USERNAME
       #   value: <user>
       # - key: SPRING_DATASOURCE_PASSWORD
