@@ -1,25 +1,23 @@
 # Backend Deployment Guide - Render
 
-Your backend is ready to deploy to Render with PostgreSQL database.
+Your backend is ready to deploy to Render using an external PostgreSQL (no billing required on Render).
 
 ## Prerequisites
 - Backend code pushed to GitHub (already done ✓)
 - Render account (free tier available)
 
-## Step 1: Create PostgreSQL Database on Render
+## Step 1: Create External PostgreSQL (No card required)
 
-1. Go to https://dashboard.render.com
-2. Click "New +" → "PostgreSQL"
-3. Configure:
-   - **Name:** `certificate-db`
-   - **Database:** `certificate_db`
-   - **User:** `postgres`
-   - **Region:** Choose closest to you
-   - **PostgreSQL Version:** 15 or higher
-4. Click "Create Database"
-5. **Save these values:**
-   - Internal Database URL (copy full connection string)
-   - External Database URL (if connecting from outside)
+Use a free Postgres provider (pick one):
+- **Supabase (free tier):** https://supabase.com → New project → Database password (save it) → Get `Connection string → URI` (use `postgres://...`).
+- **Railway (free tier):** https://railway.app → New Project → Provision Postgres → Get the `Postgres Connection URL`.
+
+Record these values from your provider:
+- Host, Port
+- Database name
+- Username
+- Password
+- Full URL `postgresql://<user>:<password>@<host>:<port>/<database>`
 
 ## Step 2: Create Web Service for Backend
 
@@ -27,12 +25,9 @@ Your backend is ready to deploy to Render with PostgreSQL database.
 
 1. In Render dashboard, click "New +" → "Blueprint"
 2. Connect your GitHub repository
-3. Render automatically detects `render.yaml` and creates:
-   - PostgreSQL database (`certificate-db`)
-   - Docker-based web service (`certificate-backend`)
-4. Wait for database creation (~2 minutes)
-5. Add environment variables (see Step 4 below)
-6. Deploy will start automatically
+3. Render detects `render.yaml` and creates a Docker-based web service (`certificate-backend`).
+4. Add environment variables (Step 4) using your external Postgres credentials.
+5. Deploy will start automatically
 
 ### Option B: Manual Setup
 
@@ -49,13 +44,14 @@ Your backend is ready to deploy to Render with PostgreSQL database.
    - **Dockerfile Path:** `./Dockerfile`
    - No build/start commands needed (Docker handles this)
 4. **Environment Variables:**
-   Add these (get database URL from Step 1):
+   Add these using your external Postgres values (from Supabase/Railway):
    ```
    SPRING_DATASOURCE_URL=postgresql://<user>:<password>@<host>:<port>/<database>
-   SPRING_DATASOURCE_USERNAME=certuser
-   SPRING_DATASOURCE_PASSWORD=<your-db-password>
+   SPRING_DATASOURCE_USERNAME=<user>
+   SPRING_DATASOURCE_PASSWORD=<password>
    SPRING_JPA_HIBERNATE_DDL_AUTO=update
    SERVER_PORT=8080
+   CORS_ALLOWED_ORIGINS=https://spectacular-cucurucho-793843.netlify.app
    ```
 
 5. **Plan:** Select "Free" tier (if available) or "Standard" ($7/month)
