@@ -1,0 +1,176 @@
+<div class="certificate-detail-container">
+  <div class="loading-shade" *ngIf="loading">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="certificate && !loading">
+    <!-- Header -->
+    <div class="header-section">
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Certificate Details</h1>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-grid">
+      <!-- Left Column: Certificate Info -->
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>verified</mat-icon>
+            Certificate Information
+          </mat-card-title>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <div class="info-group">
+            <div class="info-item">
+              <span class="label">Certificate ID</span>
+              <div class="value-with-copy">
+                <span class="value mono">{{ certificate.uniqueId }}</span>
+                <button mat-icon-button (click)="copyToClipboard(certificate.uniqueId)">
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <div class="info-item">
+              <span class="label">Status</span>
+              <mat-chip [color]="getStatusColor(certificate.status)">
+                <mat-icon>{{ getStatusIcon(certificate.status) }}</mat-icon>
+                {{ certificate.status }}
+              </mat-chip>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <div class="info-item">
+              <span class="label">Recipient Name</span>
+              <span class="value">{{ certificate.recipientName }}</span>
+            </div>
+
+            <div class="info-item">
+              <span class="label">Recipient Email</span>
+              <span class="value">{{ certificate.recipientEmail }}</span>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <div class="info-item">
+              <span class="label">Template</span>
+              <span class="value">{{ certificate.templateName }}</span>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <div class="info-item">
+              <span class="label">Created Date</span>
+              <span class="value">{{ certificate.createdAt | date:'full' }}</span>
+            </div>
+
+            <div class="info-item" *ngIf="certificate.downloadedAt">
+              <span class="label">Last Downloaded</span>
+              <span class="value">{{ certificate.downloadedAt | date:'medium' }}</span>
+            </div>
+
+            <div class="info-item">
+              <span class="label">Download Count</span>
+              <span class="value">
+                <mat-icon class="inline-icon">download</mat-icon>
+                {{ certificate.downloadCount }} time(s)
+              </span>
+            </div>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-raised-button color="primary" 
+                  (click)="onDownload()" 
+                  [disabled]="downloading">
+            <mat-icon>download</mat-icon>
+            Download PDF
+            <mat-spinner *ngIf="downloading" diameter="20"></mat-spinner>
+          </button>
+          
+          <button mat-raised-button (click)="shareViaEmail()">
+            <mat-icon>email</mat-icon>
+            Share via Email
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <!-- Right Column: Security & Verification -->
+      <div class="right-column">
+        <!-- Security Card -->
+        <mat-card class="security-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>security</mat-icon>
+              Security Information
+            </mat-card-title>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="security-item">
+              <div class="security-label">
+                <mat-icon>fingerprint</mat-icon>
+                <span>Digital Signature</span>
+              </div>
+              <div class="signature-value">
+                <code>{{ certificate.digitalSignature }}</code>
+                <button mat-icon-button 
+                        (click)="copyToClipboard(certificate.digitalSignature)">
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+              </div>
+              <p class="security-hint">
+                This signature ensures the certificate has not been tampered with.
+              </p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- QR Code Card -->
+        <mat-card class="qr-card" *ngIf="certificate.qrCodeData">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>qr_code_2</mat-icon>
+              Verification QR Code
+            </mat-card-title>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="qr-container">
+              <div class="qr-placeholder">
+                <mat-icon>qr_code_2</mat-icon>
+              </div>
+              <p class="qr-hint">Scan to verify authenticity</p>
+              <div class="qr-url">
+                <a [href]="certificate.qrCodeData" target="_blank">
+                  {{ certificate.qrCodeData }}
+                </a>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Certificate Data Card -->
+        <mat-card class="data-card" *ngIf="certificate.certificateData">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>data_object</mat-icon>
+              Certificate Data
+            </mat-card-title>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <pre class="json-view">{{ certificate.certificateData | json }}</pre>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</div>

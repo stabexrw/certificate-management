@@ -1,0 +1,124 @@
+.simulation-container {
+  padding: 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 20px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.input-card {
+  height: fit-content;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.placeholder-inputs {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+.preview-card {
+  min-height: 600px;
+}
+
+.preview-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+
+  mat-spinner {
+    margin-bottom: 16px;
+  }
+
+  p {
+    color: #666;
+    font-size: 14px;
+  }
+}
+
+.preview-frame {
+  width: 100%;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: auto;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.certificate-preview {
+  padding: 40px;
+  min-height: 400px;
+  
+  // Ensure CKEditor styles are preserved
+  ::ng-deep {
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    p, h1, h2, h3, h4, h5, h6, span, div {
+      line-height: inherit;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  }
+}
+
+@media print {
+  .simulation-container {
+    grid-template-columns: 1fr;
+  }
+
+  .input-card {
+    display: none;
+  }
+
+  .preview-card {
+    box-shadow: none;
+    border: none;
+  }
+
+  .preview-frame {
+    border: none;
+  }
+}

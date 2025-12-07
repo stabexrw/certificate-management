@@ -1,0 +1,49 @@
+.verify-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+
+  mat-card {
+    width: 100%;
+    max-width: 720px;
+  }
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 0;
+}
+
+.valid, .invalid, .error {
+  text-align: center;
+  padding: 1rem 0.5rem;
+}
+
+.valid {
+  color: #2e7d32; /* green */
+}
+
+.invalid {
+  color: #c62828; /* red */
+}
+
+.error {
+  color: #d32f2f;
+}
+
+button {
+  margin-top: 1rem;
+}
+
+@media (max-width: 480px) {
+  .verify-container {
+    padding: 1rem;
+  }
+
+  .verify-container mat-card {
+    margin: 0 0.5rem;
+  }
+}

@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: certificate-service
+    
+  datasource:
+    url: jdbc:postgresql://localhost:5432/certificate_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 10000
+      initialization-fail-timeout: 0
+      maximum-pool-size: 5
+      minimum-idle: 1
+    
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        temp:
+          use_jdbc_metadata_defaults: false
+        
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+app:
+  jwt:
+    secret: YourSuperSecretKeyThatIsAtLeast256BitsLongForHS256Algorithm
+    expiration: 86400000 # 24 hours
+  certificate:
+    storage-path: ./certificates
+  signature:
+    secret: ${APP_SIGNATURE_SECRET:ChangeMePlease}
+    key-id: ${APP_SIGNATURE_KEY_ID:v1}
+    
+logging:
+  level:
+    com.seccertificate: DEBUG
+    org.springframework.security: DEBUG

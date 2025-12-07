@@ -1,0 +1,33 @@
+<div class="verify-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>qr_code</mat-icon>
+        Verify Certificate
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="loading" class="loading">
+        <mat-spinner></mat-spinner>
+        <p>Verifying...</p>
+      </div>
+
+      <div *ngIf="!loading">
+        <div *ngIf="error" class="error">
+          <p>{{ error }}</p>
+        </div>
+
+        <div *ngIf="valid === true" class="valid">
+          <h3>Certificate is valid</h3>
+          <p>This certificate has a valid digital signature.</p>
+          <button mat-raised-button color="primary" (click)="downloadIfAllowed()">View Details / Download</button>
+        </div>
+
+        <div *ngIf="valid === false" class="invalid">
+          <h3>Certificate is INVALID</h3>
+          <p>The signature did not match our records.</p>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

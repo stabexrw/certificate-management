@@ -1,0 +1,38 @@
+.certificate-list-container {
+  padding: 24px;
+
+  .filters-card {
+    margin: 16px 0;
+
+    .filters-container {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+
+      .search-field, .status-field {
+        flex: 1;
+      }
+    }
+  }
+
+  .table-card {
+    position: relative;
+
+    .loading-shade {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .full-width {
+    width: 100%;
+  }
+}

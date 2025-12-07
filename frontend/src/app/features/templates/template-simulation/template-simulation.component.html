@@ -1,0 +1,73 @@
+<div class="simulation-container">
+  <mat-card class="input-card">
+    <mat-card-header>
+      <mat-card-title>Certificate Simulation</mat-card-title>
+      <mat-card-subtitle>Enter test values for placeholders</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="placeholderForm">
+        <div class="placeholder-inputs">
+          <mat-form-field 
+            appearance="outline" 
+            class="full-width"
+            *ngFor="let placeholder of placeholders">
+            <mat-label>{{'{{'}}{{ placeholder }}{{'}}'}}</mat-label>
+            <input 
+              matInput 
+              [formControlName]="placeholder"
+              [placeholder]="'Enter value for ' + placeholder">
+          </mat-form-field>
+        </div>
+
+        <div class="action-buttons">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            (click)="simulatePreview()"
+            [disabled]="isLoading">
+            <mat-icon>visibility</mat-icon>
+            Generate Preview
+          </button>
+
+          <button 
+            mat-raised-button 
+            color="accent" 
+            (click)="downloadPdf()"
+            [disabled]="isLoading || !templateId">
+            <mat-icon>picture_as_pdf</mat-icon>
+            Download PDF
+          </button>
+
+          <button 
+            mat-stroked-button 
+            (click)="goBack()"
+            [disabled]="isLoading">
+            <mat-icon>arrow_back</mat-icon>
+            Back
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Preview Section -->
+  <mat-card class="preview-card" *ngIf="showPreview || isLoading">
+    <mat-card-header>
+      <mat-card-title>Certificate Preview</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="preview-wrapper" *ngIf="isLoading">
+        <mat-spinner></mat-spinner>
+        <p>Generating preview...</p>
+      </div>
+
+      <div class="preview-wrapper" *ngIf="!isLoading && showPreview">
+        <div class="preview-frame">
+          <div [innerHTML]="previewHtml" class="certificate-preview"></div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

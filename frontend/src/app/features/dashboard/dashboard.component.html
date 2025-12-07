@@ -1,0 +1,90 @@
+<div class="dashboard-container">
+  <h1>Dashboard</h1>
+
+  <div class="stats-grid" *ngIf="!loading">
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>description</mat-icon>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.totalTemplates }}</h3>
+          <p>Total Templates</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>verified</mat-icon>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.totalCertificates }}</h3>
+          <p>Total Certificates</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.recentCertificates }}</h3>
+          <p>This Week</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="quick-actions">
+    <h2>Quick Actions</h2>
+    <div class="action-buttons">
+      <button mat-raised-button color="primary" routerLink="/templates/create">
+        <mat-icon>add</mat-icon> Create Template
+      </button>
+      <button mat-raised-button color="accent" routerLink="/certificates/generate">
+        <mat-icon>verified</mat-icon> Generate Certificate
+      </button>
+    </div>
+  </div>
+
+  <div class="recent-activity">
+    <h2>Recent Certificates</h2>
+    <mat-table [dataSource]="certificates.slice(0, 5)" *ngIf="certificates.length > 0">
+      <ng-container matColumnDef="uniqueId">
+        <mat-header-cell *matHeaderCellDef>Certificate ID</mat-header-cell>
+        <mat-cell *matCellDef="let cert">{{ cert.uniqueId }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="recipientName">
+        <mat-header-cell *matHeaderCellDef>Recipient</mat-header-cell>
+        <mat-cell *matCellDef="let cert">{{ cert.recipientName }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="templateName">
+        <mat-header-cell *matHeaderCellDef>Template</mat-header-cell>
+        <mat-cell *matCellDef="let cert">{{ cert.templateName }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="createdAt">
+        <mat-header-cell *matHeaderCellDef>Created</mat-header-cell>
+        <mat-cell *matCellDef="let cert">{{ cert.createdAt | date:'short' }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell *matCellDef="let cert">
+          <button mat-icon-button [routerLink]="['/certificates', cert.uniqueId]">
+            <mat-icon>visibility</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="['uniqueId', 'recipientName', 'templateName', 'createdAt', 'actions']"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: ['uniqueId', 'recipientName', 'templateName', 'createdAt', 'actions']"></mat-row>
+    </mat-table>
+  </div>
+</div>

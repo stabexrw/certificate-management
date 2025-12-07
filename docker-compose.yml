@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: certificate-postgres
+    environment:
+      POSTGRES_DB: certificate_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - certificate-network
+
+volumes:
+  postgres_data:
+
+networks:
+  certificate-network:
+    driver: bridge

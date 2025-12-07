@@ -1,0 +1,229 @@
+<div class="certificate-generate-container">
+  <mat-card class="header-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>verified</mat-icon>
+        Generate Certificate
+      </mat-card-title>
+      <mat-card-subtitle>Create a new certificate from a template</mat-card-subtitle>
+    </mat-card-header>
+  </mat-card>
+
+  <div class="content-grid">
+    <!-- Left Panel: Form -->
+    <mat-card class="form-card">
+      <mat-card-content>
+        <form [formGroup]="generateForm">
+          <!-- Template Selection -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Select Template</mat-label>
+            <mat-select formControlName="templateId" (selectionChange)="onTemplateChange($event)">
+              <mat-option *ngFor="let template of templates" [value]="template.id">
+                {{ template.name }}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>description</mat-icon>
+            <mat-error *ngIf="generateForm.get('templateId')?.hasError('required')">
+              Please select a template
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Template Info -->
+          <div *ngIf="selectedTemplate" class="template-info">
+            <mat-divider></mat-divider>
+            <div class="info-section">
+              <h3>Template Information</h3>
+              <p><strong>Name:</strong> {{ selectedTemplate.name }}</p>
+              <p><strong>Type:</strong> {{ selectedTemplate.type }}</p>
+              <p *ngIf="selectedTemplate.description">
+                <strong>Description:</strong> {{ selectedTemplate.description }}
+              </p>
+              <p>
+                <strong>Placeholders:</strong> 
+                <mat-chip-set>
+                  <mat-chip *ngFor="let placeholder of selectedTemplate.placeholders">
+                    {{ placeholder }}
+                  </mat-chip>
+                </mat-chip-set>
+              </p>
+            </div>
+            <mat-divider></mat-divider>
+          </div>
+
+          <!-- Recipient Information -->
+          <div class="section-title">
+            <h3>Recipient Information</h3>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Recipient Name</mat-label>
+            <input matInput formControlName="recipientName" placeholder="John Doe">
+            <mat-icon matPrefix>person</mat-icon>
+            <mat-error *ngIf="generateForm.get('recipientName')?.hasError('required')">
+              Recipient name is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Recipient Email</mat-label>
+            <input matInput type="email" formControlName="recipientEmail" 
+                   placeholder="john@example.com">
+            <mat-icon matPrefix>email</mat-icon>
+            <mat-error *ngIf="generateForm.get('recipientEmail')?.hasError('required')">
+              Email is required
+            </mat-error>
+            <mat-error *ngIf="generateForm.get('recipientEmail')?.hasError('email')">
+              Please enter a valid email
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Dynamic Placeholder Fields -->
+          <div *ngIf="getPlaceholderKeys().length > 0" class="placeholders-section">
+            <div class="section-title">
+              <h3>Certificate Data</h3>
+              <p class="hint">Fill in the values for certificate placeholders</p>
+            </div>
+
+            <mat-form-field *ngFor="let key of getPlaceholderKeys()" 
+                            appearance="outline" class="full-width">
+              <mat-label>{{ getPlaceholderLabel(key) }}</mat-label>
+              <input matInput [formControl]="placeholderControls[key]" 
+                     [placeholder]="'Enter ' + getPlaceholderLabel(key).toLowerCase()">
+              <mat-icon matPrefix>edit</mat-icon>
+              <mat-error *ngIf="placeholderControls[key].hasError('required')">
+                This field is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button mat-raised-button color="primary" 
+                    (click)="onPreview()" 
+                    [disabled]="!isFormValid() || loading">
+              <mat-icon>visibility</mat-icon>
+              Preview
+            </button>
+
+            <button mat-raised-button color="accent" 
+                    (click)="onSimulate()" 
+                    [disabled]="!isFormValid() || generating">
+              <mat-icon>play_circle</mat-icon>
+              Simulate
+            </button>
+
+            <button mat-raised-button color="warn" 
+                    (click)="onGenerate()" 
+                    [disabled]="!isFormValid() || generating">
+              <mat-icon>verified</mat-icon>
+              Generate Certificate
+              <mat-spinner *ngIf="generating" diameter="20"></mat-spinner>
+            </button>
+
+            <button mat-stroked-button (click)="onReset()">
+              <mat-icon>refresh</mat-icon>
+              Reset
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Right Panel: Preview/Result -->
+    <mat-card class="preview-card">
+      <mat-card-header>
+        <mat-card-title>Preview / Result</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- Preview -->
+        <div *ngIf="showPreview && !generatedCertificate" class="preview-container">
+          <div class="preview-wrapper" [innerHTML]="previewHtml"></div>
+          <div class="preview-note">
+            <mat-icon>info</mat-icon>
+            <span>This is a preview. Click "Generate Certificate" to create the actual PDF.</span>
+          </div>
+        </div>
+
+        <!-- Success Result -->
+        <div *ngIf="generatedCertificate" class="success-container">
+          <div class="success-icon">
+            <mat-icon color="primary">check_circle</mat-icon>
+          </div>
+          <h2>Certificate Generated Successfully!</h2>
+          
+          <div class="certificate-details">
+            <mat-list>
+              <mat-list-item>
+                <mat-icon matListItemIcon>fingerprint</mat-icon>
+                <div matListItemTitle>Certificate ID</div>
+                <div matListItemLine>{{ generatedCertificate.uniqueId }}</div>
+              </mat-list-item>
+              
+              <mat-list-item>
+                <mat-icon matListItemIcon>person</mat-icon>
+                <div matListItemTitle>Recipient</div>
+                <div matListItemLine>{{ generatedCertificate.recipientName }}</div>
+              </mat-list-item>
+              
+              <mat-list-item>
+                <mat-icon matListItemIcon>email</mat-icon>
+                <div matListItemTitle>Email</div>
+                <div matListItemLine>{{ generatedCertificate.recipientEmail }}</div>
+              </mat-list-item>
+              
+              <mat-list-item>
+                <mat-icon matListItemIcon>schedule</mat-icon>
+                <div matListItemTitle>Generated At</div>
+                <div matListItemLine>{{ generatedCertificate.createdAt | date:'medium' }}</div>
+              </mat-list-item>
+              
+              <mat-list-item>
+                <mat-icon matListItemIcon>security</mat-icon>
+                <div matListItemTitle>Digital Signature</div>
+                <div matListItemLine class="signature-text">
+                  {{ generatedCertificate.digitalSignature.substring(0, 32) }}...
+                </div>
+              </mat-list-item>
+            </mat-list>
+          </div>
+
+          <div class="result-actions">
+            <button mat-raised-button color="primary" (click)="onDownload()">
+              <mat-icon>download</mat-icon>
+              Download PDF
+              <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+            </button>
+
+            <button mat-raised-button color="accent" (click)="onViewCertificate()">
+              <mat-icon>visibility</mat-icon>
+              View Details
+            </button>
+
+            <button mat-stroked-button (click)="onReset()">
+              <mat-icon>add</mat-icon>
+              Generate Another
+            </button>
+          </div>
+
+          <!-- QR Code Section -->
+          <div class="qr-section" *ngIf="generatedCertificate.qrCodeData">
+            <mat-divider></mat-divider>
+            <h3>Verification QR Code</h3>
+            <p class="hint">Scan to verify certificate authenticity</p>
+            <div class="qr-placeholder">
+              <mat-icon>qr_code_2</mat-icon>
+              <p>{{ generatedCertificate.qrCodeData }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!showPreview && !generatedCertificate" class="empty-state">
+          <mat-icon>preview</mat-icon>
+          <h3>No Preview Available</h3>
+          <p>Select a template and fill in the details to preview the certificate</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
