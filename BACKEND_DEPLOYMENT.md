@@ -52,7 +52,7 @@ Your backend is ready to deploy to Render with PostgreSQL database.
    Add these (get database URL from Step 1):
    ```
    SPRING_DATASOURCE_URL=postgresql://<user>:<password>@<host>:<port>/<database>
-   SPRING_DATASOURCE_USERNAME=postgres
+   SPRING_DATASOURCE_USERNAME=certuser
    SPRING_DATASOURCE_PASSWORD=<your-db-password>
    SPRING_JPA_HIBERNATE_DDL_AUTO=update
    SERVER_PORT=8080

@@ -14,7 +14,7 @@ services:
       # - key: SPRING_DATASOURCE_URL
       #   value: <your-postgres-internal-url>
       # - key: SPRING_DATASOURCE_USERNAME
-      #   value: postgres
+      #   value: certuser
       # - key: SPRING_DATASOURCE_PASSWORD
       #   fromDatabase:
       #     name: certificate-db
@@ -25,5 +25,5 @@ services:
 databases:
   - name: certificate-db
     databaseName: certificate_db
-    user: postgres
+    user: certuser
     region: oregon
