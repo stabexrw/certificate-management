@@ -1,6 +1,7 @@
 services:
   - type: web
     name: certificate-backend
+    plan: free
     runtime: docker
     region: oregon
     dockerfilePath: ./backend/Dockerfile
