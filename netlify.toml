@@ -1,7 +1,7 @@
 [build]
   base = "frontend"
   command = "npm run build -- --configuration production"
-  publish = "dist/certificate-frontend"
+  publish = "dist/certificate-frontend/browser"
 
 [[redirects]]
   from = "/*"
