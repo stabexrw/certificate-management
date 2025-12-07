@@ -1,5 +1,5 @@
 [build]
-  command = "cd frontend && npm run build -- --configuration production"
+  command = "cd frontend && npm ci && npm run build -- --configuration production"
   publish = "frontend/dist/certificate-frontend/browser"
 
 [build.environment]
