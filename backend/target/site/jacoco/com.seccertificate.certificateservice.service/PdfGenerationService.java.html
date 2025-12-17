@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PdfGenerationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">certificate-service</a> &gt; <a href="index.source.html" class="el_package">com.seccertificate.certificateservice.service</a> &gt; <span class="el_source">PdfGenerationService.java</span></div><h1>PdfGenerationService.java</h1><pre class="source lang-java linenums">package com.seccertificate.certificateservice.service;
+
+import com.itextpdf.html2pdf.ConverterProperties;
+import com.itextpdf.html2pdf.HtmlConverter;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.seccertificate.certificateservice.entity.Template;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.layout.element.Image;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Base64;
+import java.util.Map;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+@Service
+<span class="fc" id="L34">@Slf4j</span>
+<span class="nc" id="L35">public class PdfGenerationService {</span>
+    
+    @Value(&quot;${app.certificate.storage-path:./certificates}&quot;)
+    private String storagePath;
+    
+    @Value(&quot;${app.frontend.url:http://localhost:4200}&quot;)
+    private String frontendUrl;
+    
+    public String generateCertificatePdf(Template template, Map&lt;String, String&gt; data, String uniqueId, String qrCodeUrl) 
+            throws IOException {
+        
+        // Create storage directory if it doesn't exist
+<span class="nc" id="L47">        Path directoryPath = Paths.get(storagePath);</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        if (!Files.exists(directoryPath)) {</span>
+<span class="nc" id="L49">            Files.createDirectories(directoryPath);</span>
+        }
+        
+        // Replace placeholders in template
+<span class="nc" id="L53">        String processedContent = replacePlaceholders(template.getTemplateContent(), data);</span>
+        
+        // Generate PDF file path
+<span class="nc" id="L56">        String fileName = String.format(&quot;certificate_%s.pdf&quot;, uniqueId);</span>
+<span class="nc" id="L57">        String filePath = Paths.get(storagePath, fileName).toString();</span>
+        
+        // Generate PDF (embed QR code in the left corner)
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        if (template.getType() == Template.TemplateType.HTML) {</span>
+<span class="nc" id="L61">            generatePdfFromHtml(processedContent, filePath, uniqueId, qrCodeUrl);</span>
+        } else {
+<span class="nc" id="L63">            generateSimplePdf(processedContent, filePath, uniqueId, qrCodeUrl);</span>
+        }
+        
+<span class="nc" id="L66">        log.info(&quot;Certificate PDF generated: {}&quot;, filePath);</span>
+<span class="nc" id="L67">        return filePath;</span>
+    }
+    
+    private void generatePdfFromHtml(String htmlContent, String outputPath, String uniqueId, String qrCodeUrl) 
+            throws IOException {
+        
+        // Add watermark and unique ID to HTML
+<span class="nc" id="L74">        String enhancedHtml = addWatermarkToHtml(htmlContent, uniqueId);</span>
+
+        // If template author placed a placeholder `{{qr_image}}` in HTML, replace it with an inline base64 PNG
+<span class="nc bnc" id="L77" title="All 4 branches missed.">        if (qrCodeUrl != null &amp;&amp; !qrCodeUrl.isBlank()) {</span>
+            try {
+<span class="nc" id="L79">                String qrBase64 = generateQrBase64(qrCodeUrl, 200);</span>
+<span class="nc" id="L80">                String inlineImg = String.format(&quot;&lt;img src=\&quot;data:image/png;base64,%s\&quot; style=\&quot;width:100px;height:100px;\&quot;/&gt;&quot;, qrBase64);</span>
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">                if (enhancedHtml.contains(&quot;{{qr_image}}&quot;)) {</span>
+<span class="nc" id="L83">                    enhancedHtml = enhancedHtml.replace(&quot;{{qr_image}}&quot;, inlineImg);</span>
+                } else {
+                    // Fallback: embed QR at fixed top-left position if placeholder not present
+<span class="nc" id="L86">                    String qrImg = String.format(&quot;&lt;img src=\&quot;data:image/png;base64,%s\&quot; style=\&quot;position: fixed; left: 10px; top: 10px; width: 100px; height: 100px; z-index:9999;\&quot;/&gt;&quot;, qrBase64);</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                    if (enhancedHtml.contains(&quot;&lt;/body&gt;&quot;)) {</span>
+<span class="nc" id="L88">                        enhancedHtml = enhancedHtml.replace(&quot;&lt;/body&gt;&quot;, qrImg + &quot;&lt;/body&gt;&quot;);</span>
+                    } else {
+<span class="nc" id="L90">                        enhancedHtml = qrImg + enhancedHtml;</span>
+                    }
+                }
+<span class="nc" id="L93">            } catch (WriterException e) {</span>
+<span class="nc" id="L94">                log.warn(&quot;Failed to generate QR code for PDF: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L95">            }</span>
+        }
+        
+<span class="nc" id="L98">        try (FileOutputStream fos = new FileOutputStream(outputPath)) {</span>
+<span class="nc" id="L99">            ConverterProperties converterProperties = new ConverterProperties();</span>
+<span class="nc" id="L100">            HtmlConverter.convertToPdf(enhancedHtml, fos, converterProperties);</span>
+        }
+<span class="nc" id="L102">    }</span>
+    
+    private void generateSimplePdf(String content, String outputPath, String uniqueId, String qrCodeUrl) 
+            throws IOException {
+        
+<span class="nc" id="L107">        try (PdfWriter writer = new PdfWriter(outputPath);</span>
+<span class="nc" id="L108">             PdfDocument pdf = new PdfDocument(writer);</span>
+<span class="nc" id="L109">             Document document = new Document(pdf)) {</span>
+            
+            // Add content
+<span class="nc" id="L112">            document.add(new Paragraph(content));</span>
+            
+            // Add watermark/unique ID
+<span class="nc" id="L115">            document.add(new Paragraph(&quot;\n\n&quot;)</span>
+<span class="nc" id="L116">                    .setFontSize(8)</span>
+<span class="nc" id="L117">                    .setItalic());</span>
+<span class="nc" id="L118">            document.add(new Paragraph(&quot;Certificate ID: &quot; + uniqueId)</span>
+<span class="nc" id="L119">                    .setFontSize(8)</span>
+<span class="nc" id="L120">                    .setItalic());</span>
+
+            // Add QR code image at top-left if provided
+<span class="nc bnc" id="L123" title="All 4 branches missed.">            if (qrCodeUrl != null &amp;&amp; !qrCodeUrl.isBlank()) {</span>
+                try {
+<span class="nc" id="L125">                    String qrBase64 = generateQrBase64(qrCodeUrl, 200);</span>
+<span class="nc" id="L126">                    byte[] imgBytes = Base64.getDecoder().decode(qrBase64);</span>
+<span class="nc" id="L127">                    ImageData imgData = ImageDataFactory.create(imgBytes);</span>
+<span class="nc" id="L128">                    Image img = new Image(imgData);</span>
+                    // position near top-left (1 inch margin = 72 units)
+<span class="nc" id="L130">                    float x = 36f;</span>
+<span class="nc" id="L131">                    float y = pdf.getDefaultPageSize().getHeight() - 36f - 100f; // top minus height</span>
+<span class="nc" id="L132">                    img.setFixedPosition(x, y);</span>
+<span class="nc" id="L133">                    img.scaleToFit(100f, 100f);</span>
+<span class="nc" id="L134">                    document.add(img);</span>
+<span class="nc" id="L135">                } catch (WriterException e) {</span>
+<span class="nc" id="L136">                    log.warn(&quot;Failed to generate QR code for simple PDF: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L137">                }</span>
+            }
+        }
+<span class="nc" id="L140">    }</span>
+    
+    private String replacePlaceholders(String template, Map&lt;String, String&gt; data) {
+<span class="nc" id="L143">        String result = template;</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        for (Map.Entry&lt;String, String&gt; entry : data.entrySet()) {</span>
+<span class="nc" id="L145">            String placeholder = &quot;{{&quot; + entry.getKey() + &quot;}}&quot;;</span>
+<span class="nc" id="L146">            result = result.replace(placeholder, entry.getValue());</span>
+<span class="nc" id="L147">        }</span>
+<span class="nc" id="L148">        return result;</span>
+    }
+    
+    private String addWatermarkToHtml(String html, String uniqueId) {
+        // Add unique ID watermark to HTML
+<span class="nc" id="L153">        String watermark = String.format(</span>
+            &quot;&lt;div style='position: fixed; bottom: 10px; right: 10px; font-size: 8px; color: #ccc;'&gt;&quot; +
+            &quot;Certificate ID: %s&lt;/div&gt;&quot;, uniqueId);
+        
+<span class="nc bnc" id="L157" title="All 2 branches missed.">        if (html.contains(&quot;&lt;/body&gt;&quot;)) {</span>
+<span class="nc" id="L158">            return html.replace(&quot;&lt;/body&gt;&quot;, watermark + &quot;&lt;/body&gt;&quot;);</span>
+        }
+<span class="nc" id="L160">        return html + watermark;</span>
+    }
+
+    private String generateQrBase64(String text, int size) throws WriterException, IOException {
+<span class="nc" id="L164">        QRCodeWriter qrWriter = new QRCodeWriter();</span>
+<span class="nc" id="L165">        BitMatrix bitMatrix = qrWriter.encode(text, BarcodeFormat.QR_CODE, size, size);</span>
+<span class="nc" id="L166">        ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L167">        MatrixToImageWriter.writeToStream(bitMatrix, &quot;PNG&quot;, baos);</span>
+<span class="nc" id="L168">        return Base64.getEncoder().encodeToString(baos.toByteArray());</span>
+    }
+    
+    public String generateQRCode(String uniqueId, Long customerId, String digitalSignature) {
+        // Generate verification URL for QR code pointing to frontend verify route
+<span class="nc" id="L173">        String encodedSignature = URLEncoder.encode(digitalSignature, StandardCharsets.UTF_8);</span>
+<span class="nc bnc" id="L174" title="All 4 branches missed.">        String base = frontendUrl != null &amp;&amp; !frontendUrl.isBlank() ? frontendUrl.replaceAll(&quot;/+$&quot;, &quot;&quot;) : &quot;http://localhost:4200&quot;;</span>
+<span class="nc" id="L175">        return String.format(&quot;%s/verify/%s?customer=%d&amp;signature=%s&quot;, base, uniqueId, customerId, encodedSignature);</span>
+    }
+    
+    public byte[] readCertificateFile(String filePath) throws IOException {
+<span class="nc" id="L179">        Path path = Paths.get(filePath);</span>
+<span class="nc" id="L180">        return Files.readAllBytes(path);</span>
+    }
+    
+    /**
+     * Generate PDF from HTML content with placeholder replacement (for simulation/preview)
+     */
+    public byte[] generatePdfFromHtmlContent(String htmlContent, Map&lt;String, String&gt; placeholderValues) throws IOException {
+        try {
+            // Replace placeholders with actual values
+<span class="nc" id="L189">            String processedHtml = replacePlaceholders(htmlContent, placeholderValues);</span>
+            
+            // Add CSS to ensure proper rendering
+<span class="nc" id="L192">            String styledHtml = wrapHtmlWithStyles(processedHtml);</span>
+            
+            // Generate PDF using iText
+<span class="nc" id="L195">            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L196">            ConverterProperties converterProperties = new ConverterProperties();</span>
+            
+<span class="nc" id="L198">            HtmlConverter.convertToPdf(styledHtml, outputStream, converterProperties);</span>
+            
+<span class="nc" id="L200">            return outputStream.toByteArray();</span>
+<span class="nc" id="L201">        } catch (Exception e) {</span>
+<span class="nc" id="L202">            log.error(&quot;Error generating PDF from HTML&quot;, e);</span>
+<span class="nc" id="L203">            throw new IOException(&quot;Failed to generate PDF: &quot; + e.getMessage(), e);</span>
+        }
+    }
+    
+    /**
+     * Generate multiple PDFs in batch
+     */
+    public java.util.List&lt;byte[]&gt; generateBatchPdfs(String htmlTemplate, java.util.List&lt;Map&lt;String, String&gt;&gt; batchData) throws IOException {
+<span class="nc" id="L211">        return batchData.stream()</span>
+<span class="nc" id="L212">                .map(data -&gt; {</span>
+                    try {
+<span class="nc" id="L214">                        return generatePdfFromHtmlContent(htmlTemplate, data);</span>
+<span class="nc" id="L215">                    } catch (IOException e) {</span>
+<span class="nc" id="L216">                        log.error(&quot;Error generating PDF in batch&quot;, e);</span>
+<span class="nc" id="L217">                        return null;</span>
+                    }
+                })
+<span class="nc bnc" id="L220" title="All 2 branches missed.">                .filter(pdf -&gt; pdf != null)</span>
+<span class="nc" id="L221">                .toList();</span>
+    }
+    
+    /**
+     * Wrap HTML content with necessary styles for proper PDF rendering
+     */
+    private String wrapHtmlWithStyles(String htmlContent) {
+        // If HTML already has DOCTYPE and html tags, don't wrap again
+<span class="nc bnc" id="L229" title="All 2 branches missed.">        if (htmlContent.trim().toLowerCase().startsWith(&quot;&lt;!doctype&quot;) || </span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">            htmlContent.trim().toLowerCase().startsWith(&quot;&lt;html&quot;)) {</span>
+<span class="nc" id="L231">            return htmlContent;</span>
+        }
+        
+<span class="nc" id="L234">        return &quot;&quot;&quot;</span>
+            &lt;!DOCTYPE html&gt;
+            &lt;html&gt;
+            &lt;head&gt;
+                &lt;meta charset=&quot;UTF-8&quot;&gt;
+                &lt;style&gt;
+                    @page {
+                        size: A4 landscape;
+                        margin: 0;
+                    }
+                    body {
+                        margin: 0;
+                        padding: 20px;
+                        font-family: 'Arial', sans-serif;
+                    }
+                    * {
+                        box-sizing: border-box;
+                    }
+                &lt;/style&gt;
+            &lt;/head&gt;
+            &lt;body&gt;
+                %s
+            &lt;/body&gt;
+            &lt;/html&gt;
+<span class="nc" id="L258">            &quot;&quot;&quot;.formatted(htmlContent);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

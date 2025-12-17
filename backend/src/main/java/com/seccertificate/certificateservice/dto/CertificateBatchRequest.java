@@ -2,10 +2,10 @@ package com.seccertificate.certificateservice.dto;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -17,5 +17,6 @@ public class CertificateBatchRequest {
     private Long templateId;
     
     @NotEmpty(message = "At least one certificate data set is required")
-    private List<Map<String, String>> certificatesData;
+        @Size(max = 1000, message = "Maximum 1000 certificates per batch")
+        private List<GenerateCertificateRequest> certificates;
 }

@@ -1,0 +1,12 @@
+{
+  "name": "certificate-service-pptx",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "pptxgenjs": "^3.12.0"
+  },
+  "scripts": {
+    "build": "node generate.js"
+  }
+}

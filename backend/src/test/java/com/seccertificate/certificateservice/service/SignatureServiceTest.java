@@ -2,19 +2,25 @@ package com.seccertificate.certificateservice.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Map;
 
-@SpringBootTest
-@TestPropertySource(properties = {"app.signature.secret=TestSecretKey12345"})
 public class SignatureServiceTest {
 
-    @Autowired
     private SignatureService signatureService;
+
+    @BeforeEach
+    void setup() {
+        signatureService = new SignatureService(new ObjectMapper());
+        // Inject deterministic secret for repeatable tests without Spring context
+        ReflectionTestUtils.setField(signatureService, "signatureSecret", "TestSecretKey12345");
+        ReflectionTestUtils.setField(signatureService, "signatureKeyId", "v1-test");
+    }
 
     @Test
     void signAndVerify_shouldReturnTrue() {

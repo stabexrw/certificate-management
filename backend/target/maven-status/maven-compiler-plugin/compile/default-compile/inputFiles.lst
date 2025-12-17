@@ -1,4 +1,5 @@
 D:\certificate-service\backend\src\main\java\com\seccertificate\certificateservice\config\CorsConfig.java
+D:\certificate-service\backend\src\main\java\com\seccertificate\certificateservice\dto\BatchGenerationResponse.java
 D:\certificate-service\backend\src\main\java\com\seccertificate\certificateservice\dto\PageResponse.java
 D:\certificate-service\backend\src\main\java\com\seccertificate\certificateservice\repository\CustomerRepository.java
 D:\certificate-service\backend\src\main\java\com\seccertificate\certificateservice\controller\CustomerController.java

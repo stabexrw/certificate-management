@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomerController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">certificate-service</a> &gt; <a href="index.source.html" class="el_package">com.seccertificate.certificateservice.controller</a> &gt; <span class="el_source">CustomerController.java</span></div><h1>CustomerController.java</h1><pre class="source lang-java linenums">package com.seccertificate.certificateservice.controller;
+
+import com.seccertificate.certificateservice.dto.ApiResponse;
+import com.seccertificate.certificateservice.dto.CustomerDTO;
+import com.seccertificate.certificateservice.security.CustomUserDetails;
+import com.seccertificate.certificateservice.service.CustomerService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/customers&quot;)
+<span class="nc" id="L18">@RequiredArgsConstructor</span>
+@CrossOrigin(origins = &quot;*&quot;, maxAge = 3600)
+public class CustomerController {
+    
+    private final CustomerService customerService;
+    
+    @GetMapping(&quot;/me&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;CustomerDTO&gt;&gt; getCurrentCustomer(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+<span class="nc" id="L27">        CustomerDTO customer = customerService.getCustomerById(userDetails.getId());</span>
+<span class="nc" id="L28">        return ResponseEntity.ok(ApiResponse.success(customer));</span>
+    }
+    
+    @PutMapping(&quot;/me&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;CustomerDTO&gt;&gt; updateCurrentCustomer(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody CustomerDTO customerDTO) {
+<span class="nc" id="L35">        CustomerDTO updated = customerService.updateCustomer(userDetails.getId(), customerDTO);</span>
+<span class="nc" id="L36">        return ResponseEntity.ok(ApiResponse.success(&quot;Customer updated successfully&quot;, updated));</span>
+    }
+    
+    @PostMapping(&quot;/me/regenerate-api-key&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;String&gt;&gt; regenerateApiKey(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+<span class="nc" id="L42">        String newApiKey = customerService.regenerateApiKey(userDetails.getId());</span>
+<span class="nc" id="L43">        return ResponseEntity.ok(ApiResponse.success(&quot;API key regenerated&quot;, newApiKey));</span>
+    }
+    
+    // Admin endpoints
+    @GetMapping
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;List&lt;CustomerDTO&gt;&gt;&gt; getAllCustomers() {
+<span class="nc" id="L50">        List&lt;CustomerDTO&gt; customers = customerService.getAllCustomers();</span>
+<span class="nc" id="L51">        return ResponseEntity.ok(ApiResponse.success(customers));</span>
+    }
+    
+    @PostMapping
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;CustomerDTO&gt;&gt; createCustomer(@Valid @RequestBody CustomerDTO customerDTO) {
+<span class="nc" id="L57">        CustomerDTO created = customerService.createCustomer(customerDTO);</span>
+<span class="nc" id="L58">        return ResponseEntity.ok(ApiResponse.success(&quot;Customer created successfully&quot;, created));</span>
+    }
+    
+    @GetMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;ApiResponse&lt;CustomerDTO&gt;&gt; getCustomerById(@PathVariable Long id) {
+<span class="nc" id="L64">        CustomerDTO customer = customerService.getCustomerById(id);</span>
+<span class="nc" id="L65">        return ResponseEntity.ok(ApiResponse.success(customer));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomUserDetails.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">certificate-service</a> &gt; <a href="index.source.html" class="el_package">com.seccertificate.certificateservice.security</a> &gt; <span class="el_source">CustomUserDetails.java</span></div><h1>CustomUserDetails.java</h1><pre class="source lang-java linenums">package com.seccertificate.certificateservice.security;
+
+import com.seccertificate.certificateservice.entity.Customer;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.Collections;
+
+<span class="nc bnc" id="L13" title="All 46 branches missed.">@Data</span>
+<span class="fc" id="L14">@AllArgsConstructor</span>
+public class CustomUserDetails implements UserDetails {
+    
+<span class="fc" id="L17">    private Long id;</span>
+<span class="nc" id="L18">    private String email;</span>
+    private String password;
+<span class="nc" id="L20">    private String role;</span>
+<span class="nc" id="L21">    private Customer.CustomerStatus status;</span>
+    
+    public static CustomUserDetails create(Customer customer) {
+<span class="nc" id="L24">        return new CustomUserDetails(</span>
+<span class="nc" id="L25">                customer.getId(),</span>
+<span class="nc" id="L26">                customer.getEmail(),</span>
+<span class="nc" id="L27">                customer.getPassword(),</span>
+<span class="nc" id="L28">                customer.getRole(),</span>
+<span class="nc" id="L29">                customer.getStatus()</span>
+        );
+    }
+    
+    @Override
+    public Collection&lt;? extends GrantedAuthority&gt; getAuthorities() {
+<span class="fc" id="L35">        return Collections.singletonList(new SimpleGrantedAuthority(&quot;ROLE_&quot; + role));</span>
+    }
+    
+    @Override
+    public String getPassword() {
+<span class="nc" id="L40">        return password;</span>
+    }
+    
+    @Override
+    public String getUsername() {
+<span class="nc" id="L45">        return email;</span>
+    }
+    
+    @Override
+    public boolean isAccountNonExpired() {
+<span class="nc" id="L50">        return true;</span>
+    }
+    
+    @Override
+    public boolean isAccountNonLocked() {
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        return status == Customer.CustomerStatus.ACTIVE;</span>
+    }
+    
+    @Override
+    public boolean isCredentialsNonExpired() {
+<span class="nc" id="L60">        return true;</span>
+    }
+    
+    @Override
+    public boolean isEnabled() {
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        return status == Customer.CustomerStatus.ACTIVE;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

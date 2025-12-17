@@ -1,2 +1,6 @@
 D:\certificate-service\backend\src\test\java\com\seccertificate\certificateservice\service\CertificateServiceTest.java
+D:\certificate-service\backend\src\test\java\com\seccertificate\certificateservice\controller\CertificateControllerTest.java
+D:\certificate-service\backend\src\test\java\com\seccertificate\certificateservice\service\AuthServiceTest.java
+D:\certificate-service\backend\src\test\java\com\seccertificate\certificateservice\controller\AuthControllerTest.java
+D:\certificate-service\backend\src\test\java\com\seccertificate\certificateservice\performance\CertificatePerformanceTest.java
 D:\certificate-service\backend\src\test\java\com\seccertificate\certificateservice\service\SignatureServiceTest.java

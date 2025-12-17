@@ -13,6 +13,7 @@ com\seccertificate\certificateservice\entity\Certificate.class
 com\seccertificate\certificateservice\repository\AuditLogRepository.class
 com\seccertificate\certificateservice\CertificateServiceApplication.class
 com\seccertificate\certificateservice\dto\CustomerDTO.class
+com\seccertificate\certificateservice\dto\BatchGenerationResponse$BatchGenerationResponseBuilder.class
 com\seccertificate\certificateservice\entity\Template$TemplateBuilder.class
 com\seccertificate\certificateservice\controller\PublicController.class
 com\seccertificate\certificateservice\entity\AuditLog$AuditLogBuilder.class
@@ -57,6 +58,7 @@ com\seccertificate\certificateservice\controller\AuthController.class
 com\seccertificate\certificateservice\dto\CertificateBatchRequest$CertificateBatchRequestBuilder.class
 com\seccertificate\certificateservice\dto\TemplateDTO.class
 com\seccertificate\certificateservice\dto\TemplateSimulationResponse.class
+com\seccertificate\certificateservice\dto\BatchGenerationResponse.class
 com\seccertificate\certificateservice\entity\AuditLog.class
 com\seccertificate\certificateservice\entity\Certificate$CertificateBuilder.class
 com\seccertificate\certificateservice\dto\ErrorResponse.class

@@ -1,0 +1,76 @@
+-------------------------------------------------------------------------------
+Test set: com.seccertificate.certificateservice.performance.CertificatePerformanceTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 0, Errors: 3, Skipped: 0, Time elapsed: 26.12 s <<< FAILURE! -- in com.seccertificate.certificateservice.performance.CertificatePerformanceTest
+com.seccertificate.certificateservice.performance.CertificatePerformanceTest.shouldGenerate1000CertificatesUnder60Seconds -- Time elapsed: 0.078 s <<< ERROR!
+org.springframework.core.task.TaskRejectedException: ExecutorService in active state did not accept task: java.util.concurrent.CompletableFuture$AsyncSupply@54f1c59c
+	at org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor.execute(ThreadPoolTaskExecutor.java:365)
+	at java.base/java.util.concurrent.CompletableFuture.completeAsync(CompletableFuture.java:2673)
+	at org.springframework.util.concurrent.FutureUtils.callAsync(FutureUtils.java:68)
+	at org.springframework.core.task.AsyncTaskExecutor.submitCompletable(AsyncTaskExecutor.java:136)
+	at org.springframework.aop.interceptor.AsyncExecutionAspectSupport.doSubmit(AsyncExecutionAspectSupport.java:285)
+	at org.springframework.aop.interceptor.AsyncExecutionInterceptor.invoke(AsyncExecutionInterceptor.java:129)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.seccertificate.certificateservice.service.CertificateService$$SpringCGLIB$$0.generateCertificateAsync(<generated>)
+	at com.seccertificate.certificateservice.performance.CertificatePerformanceTest.shouldGenerate1000CertificatesUnder60Seconds(CertificatePerformanceTest.java:85)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: java.util.concurrent.RejectedExecutionException: Task java.util.concurrent.CompletableFuture$AsyncSupply@54f1c59c rejected from org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor$1@61f576dc[Running, pool size = 50, active threads = 50, queued tasks = 500, completed tasks = 1]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$AbortPolicy.rejectedExecution(ThreadPoolExecutor.java:2065)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.reject(ThreadPoolExecutor.java:833)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.execute(ThreadPoolExecutor.java:1365)
+	at org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor$1.execute(ThreadPoolTaskExecutor.java:269)
+	at org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor.execute(ThreadPoolTaskExecutor.java:362)
+	... 13 more
+
+com.seccertificate.certificateservice.performance.CertificatePerformanceTest.shouldGenerate10BatchesOf100Concurrently -- Time elapsed: 0.022 s <<< ERROR!
+org.springframework.core.task.TaskRejectedException: ExecutorService in active state did not accept task: java.util.concurrent.CompletableFuture$AsyncSupply@33f6ce71
+	at org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor.execute(ThreadPoolTaskExecutor.java:365)
+	at java.base/java.util.concurrent.CompletableFuture.completeAsync(CompletableFuture.java:2673)
+	at org.springframework.util.concurrent.FutureUtils.callAsync(FutureUtils.java:68)
+	at org.springframework.core.task.AsyncTaskExecutor.submitCompletable(AsyncTaskExecutor.java:136)
+	at org.springframework.aop.interceptor.AsyncExecutionAspectSupport.doSubmit(AsyncExecutionAspectSupport.java:285)
+	at org.springframework.aop.interceptor.AsyncExecutionInterceptor.invoke(AsyncExecutionInterceptor.java:129)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.seccertificate.certificateservice.service.CertificateService$$SpringCGLIB$$0.generateBatchCertificates(<generated>)
+	at com.seccertificate.certificateservice.performance.CertificatePerformanceTest.shouldGenerate10BatchesOf100Concurrently(CertificatePerformanceTest.java:173)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: java.util.concurrent.RejectedExecutionException: Task java.util.concurrent.CompletableFuture$AsyncSupply@33f6ce71 rejected from org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor$1@61f576dc[Running, pool size = 50, active threads = 50, queued tasks = 500, completed tasks = 1]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$AbortPolicy.rejectedExecution(ThreadPoolExecutor.java:2065)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.reject(ThreadPoolExecutor.java:833)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.execute(ThreadPoolExecutor.java:1365)
+	at org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor$1.execute(ThreadPoolTaskExecutor.java:269)
+	at org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor.execute(ThreadPoolTaskExecutor.java:362)
+	... 13 more
+
+com.seccertificate.certificateservice.performance.CertificatePerformanceTest.shouldGenerate100CertificatesUnder60Seconds -- Time elapsed: 0.029 s <<< ERROR!
+org.springframework.core.task.TaskRejectedException: ExecutorService in active state did not accept task: java.util.concurrent.CompletableFuture$AsyncSupply@5e0ef8db
+	at org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor.execute(ThreadPoolTaskExecutor.java:365)
+	at java.base/java.util.concurrent.CompletableFuture.completeAsync(CompletableFuture.java:2673)
+	at org.springframework.util.concurrent.FutureUtils.callAsync(FutureUtils.java:68)
+	at org.springframework.core.task.AsyncTaskExecutor.submitCompletable(AsyncTaskExecutor.java:136)
+	at org.springframework.aop.interceptor.AsyncExecutionAspectSupport.doSubmit(AsyncExecutionAspectSupport.java:285)
+	at org.springframework.aop.interceptor.AsyncExecutionInterceptor.invoke(AsyncExecutionInterceptor.java:129)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.seccertificate.certificateservice.service.CertificateService$$SpringCGLIB$$0.generateCertificateAsync(<generated>)
+	at com.seccertificate.certificateservice.performance.CertificatePerformanceTest.shouldGenerate100CertificatesUnder60Seconds(CertificatePerformanceTest.java:49)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: java.util.concurrent.RejectedExecutionException: Task java.util.concurrent.CompletableFuture$AsyncSupply@5e0ef8db rejected from org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor$1@61f576dc[Running, pool size = 50, active threads = 50, queued tasks = 500, completed tasks = 1]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$AbortPolicy.rejectedExecution(ThreadPoolExecutor.java:2065)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.reject(ThreadPoolExecutor.java:833)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.execute(ThreadPoolExecutor.java:1365)
+	at org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor$1.execute(ThreadPoolTaskExecutor.java:269)
+	at org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor.execute(ThreadPoolTaskExecutor.java:362)
+	... 13 more
+

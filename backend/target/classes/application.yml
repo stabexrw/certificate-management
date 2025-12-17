@@ -10,8 +10,10 @@ spring:
     hikari:
       connection-timeout: 10000
       initialization-fail-timeout: 0
-      maximum-pool-size: 5
-      minimum-idle: 1
+      maximum-pool-size: 50      # Match async thread pool size
+      minimum-idle: 20
+      idle-timeout: 600000
+      max-lifetime: 1800000
     
   jpa:
     hibernate:
@@ -22,8 +24,11 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
         jdbc:
+          batch_size: 50           # Enable batch inserts for performance
           lob:
             non_contextual_creation: true
+          order_inserts: true          # Optimize batch insert order
+          order_updates: true          # Optimize batch update order
         temp:
           use_jdbc_metadata_defaults: false
         

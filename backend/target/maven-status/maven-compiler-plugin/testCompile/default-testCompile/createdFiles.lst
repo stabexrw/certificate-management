@@ -1,2 +1,6 @@
+com\seccertificate\certificateservice\controller\CertificateControllerTest.class
+com\seccertificate\certificateservice\controller\AuthControllerTest.class
 com\seccertificate\certificateservice\service\CertificateServiceTest.class
+com\seccertificate\certificateservice\performance\CertificatePerformanceTest.class
+com\seccertificate\certificateservice\service\AuthServiceTest.class
 com\seccertificate\certificateservice\service\SignatureServiceTest.class

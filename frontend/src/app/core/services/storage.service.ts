@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
 })
 export class StorageService {
   private readonly TOKEN_KEY = 'auth_token';
-  private readonly API_KEY = 'api_key';
+  private readonly API_KEY = 'uwrwryewrter87234246674';
   private readonly USER_KEY = 'current_user';
 
   setToken(token: string): void {

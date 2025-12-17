@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CertificateDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">certificate-service</a> &gt; <a href="index.source.html" class="el_package">com.seccertificate.certificateservice.dto</a> &gt; <span class="el_source">CertificateDTO.java</span></div><h1>CertificateDTO.java</h1><pre class="source lang-java linenums">package com.seccertificate.certificateservice.dto;
+
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+
+<span class="pc bnc" id="L9" title="All 134 branches missed.">@Data</span>
+<span class="fc" id="L10">@NoArgsConstructor</span>
+<span class="nc" id="L11">@AllArgsConstructor</span>
+<span class="nc" id="L12">@Builder</span>
+public class CertificateDTO {
+<span class="nc" id="L14">    private Long id;</span>
+    
+<span class="fc" id="L16">    private String uniqueId;</span>
+    
+<span class="nc" id="L18">    private Long customerId;</span>
+    
+    @NotNull(message = &quot;Template ID is required&quot;)
+<span class="nc" id="L21">    private Long templateId;</span>
+    
+<span class="nc" id="L23">    private String templateName;</span>
+    
+<span class="nc" id="L25">    private Map&lt;String, String&gt; certificateData;</span>
+    
+<span class="nc" id="L27">    private String recipientName;</span>
+<span class="nc" id="L28">    private String recipientEmail;</span>
+    
+<span class="nc" id="L30">    private String filePath;</span>
+<span class="nc" id="L31">    private String downloadUrl;</span>
+    
+<span class="nc" id="L33">    private String digitalSignature;</span>
+<span class="nc" id="L34">    private String qrCodeData;</span>
+    
+<span class="nc" id="L36">    private String status;</span>
+    
+<span class="nc" id="L38">    private LocalDateTime createdAt;</span>
+<span class="nc" id="L39">    private LocalDateTime downloadedAt;</span>
+    
+<span class="nc" id="L41">    private Integer downloadCount;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CertificateService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">certificate-service</a> &gt; <a href="index.source.html" class="el_package">com.seccertificate.certificateservice.service</a> &gt; <span class="el_source">CertificateService.java</span></div><h1>CertificateService.java</h1><pre class="source lang-java linenums">package com.seccertificate.certificateservice.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.seccertificate.certificateservice.dto.CertificateBatchRequest;
+import com.seccertificate.certificateservice.dto.CertificateDTO;
+import com.seccertificate.certificateservice.dto.GenerateCertificateRequest;
+import com.seccertificate.certificateservice.entity.Certificate;
+import com.seccertificate.certificateservice.entity.Customer;
+import com.seccertificate.certificateservice.entity.Template;
+import com.seccertificate.certificateservice.exception.ResourceNotFoundException;
+import com.seccertificate.certificateservice.repository.CertificateRepository;
+import com.seccertificate.certificateservice.repository.CustomerRepository;
+import com.seccertificate.certificateservice.repository.TemplateRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.Map;
+import com.fasterxml.jackson.core.type.TypeReference;
+
+@Service
+<span class="fc" id="L33">@RequiredArgsConstructor</span>
+<span class="fc" id="L34">@Slf4j</span>
+public class CertificateService {
+    
+    private final CertificateRepository certificateRepository;
+    private final TemplateRepository templateRepository;
+    private final CustomerRepository customerRepository;
+    private final PdfGenerationService pdfGenerationService;
+    private final SignatureService signatureService;
+    private final ObjectMapper objectMapper;
+    private final com.seccertificate.certificateservice.repository.AuditLogRepository auditLogRepository;
+    
+    @Transactional
+    public CertificateDTO generateCertificate(Long customerId, GenerateCertificateRequest request) {
+        // Validate template ownership
+<span class="nc" id="L48">        Template template = templateRepository.findByIdAndCustomerId(request.getTemplateId(), customerId)</span>
+<span class="nc" id="L49">                .orElseThrow(() -&gt; new AccessDeniedException(&quot;Template not found or access denied&quot;));</span>
+        
+<span class="nc" id="L51">        Customer customer = customerRepository.findById(customerId)</span>
+<span class="nc" id="L52">            .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Customer not found&quot;)); // customerId is always provided, so no null safety issue</span>
+        
+        // Generate unique ID for certificate
+<span class="nc" id="L55">        String uniqueId = UUID.randomUUID().toString();</span>
+        
+        // Generate digital signature
+        try {
+            // Generate HMAC-based digital signature
+<span class="nc" id="L60">            String digitalSignature = signatureService.sign(uniqueId, request.getData());</span>
+
+            // Generate QR code data for verification (include digital signature)
+<span class="nc" id="L63">            String qrCodeData = pdfGenerationService.generateQRCode(uniqueId, customer.getId(), digitalSignature);</span>
+
+            // Generate PDF (embed QR code)
+<span class="nc" id="L66">            String filePath = pdfGenerationService.generateCertificatePdf(</span>
+                template,
+<span class="nc" id="L68">                request.getData(),</span>
+                uniqueId,
+                qrCodeData
+            );
+
+            // Create certificate entity
+<span class="nc" id="L74">            Certificate certificate = Certificate.builder()</span>
+<span class="nc" id="L75">                .uniqueId(uniqueId)</span>
+<span class="nc" id="L76">                .customer(customer)</span>
+<span class="nc" id="L77">                .template(template)</span>
+<span class="nc" id="L78">                .filePath(filePath)</span>
+<span class="nc" id="L79">                .certificateData(serializeData(request.getData()))</span>
+<span class="nc" id="L80">                .recipientName(request.getRecipientName())</span>
+<span class="nc" id="L81">                .recipientEmail(request.getRecipientEmail())</span>
+<span class="nc" id="L82">                .digitalSignature(digitalSignature)</span>
+<span class="nc" id="L83">                .signatureKeyId(signatureService.getCurrentKeyId())</span>
+<span class="nc" id="L84">                .qrCodeData(qrCodeData)</span>
+<span class="nc" id="L85">                .status(Certificate.CertificateStatus.GENERATED)</span>
+<span class="nc" id="L86">                .downloadCount(0)</span>
+<span class="nc" id="L87">                .build();</span>
+            
+<span class="nc" id="L89">            certificate = certificateRepository.save(certificate); // certificate is always built, so no null safety issue</span>
+
+            // Audit log: certificate generated
+<span class="nc" id="L92">            com.seccertificate.certificateservice.entity.AuditLog audit = com.seccertificate.certificateservice.entity.AuditLog.builder()</span>
+<span class="nc" id="L93">                    .customerId(customer.getId())</span>
+<span class="nc" id="L94">                    .action(&quot;GENERATE_CERTIFICATE&quot;)</span>
+<span class="nc" id="L95">                    .entityType(&quot;CERTIFICATE&quot;)</span>
+<span class="nc" id="L96">                    .entityId(certificate.getId())</span>
+<span class="nc" id="L97">                    .details(&quot;{\&quot;recipientName\&quot;:\&quot;&quot; + request.getRecipientName() + &quot;\&quot;,\&quot;recipientEmail\&quot;:\&quot;&quot; + request.getRecipientEmail() + &quot;\&quot;}&quot;)</span>
+<span class="nc" id="L98">                    .build();</span>
+<span class="nc" id="L99">            auditLogRepository.save(audit); // audit is always built, so no null safety issue</span>
+
+<span class="nc" id="L101">            return mapToDTO(certificate);</span>
+            
+<span class="nc" id="L103">        } catch (IOException e) {</span>
+<span class="nc" id="L104">            throw new RuntimeException(&quot;Failed to generate certificate PDF&quot;, e);</span>
+        }
+    }
+    
+        @Async(&quot;certificateGenerationExecutor&quot;)
+        @Transactional
+        public CompletableFuture&lt;CertificateDTO&gt; generateCertificateAsync(Long customerId, GenerateCertificateRequest request) {
+            try {
+<span class="nc" id="L112">                log.info(&quot;Async certificate generation started for customer: {}&quot;, customerId);</span>
+<span class="nc" id="L113">                CertificateDTO result = generateCertificate(customerId, request);</span>
+<span class="nc" id="L114">                log.info(&quot;Async certificate generation completed: {}&quot;, result.getUniqueId());</span>
+<span class="nc" id="L115">                return CompletableFuture.completedFuture(result);</span>
+<span class="nc" id="L116">            } catch (Exception e) {</span>
+<span class="nc" id="L117">                log.error(&quot;Async certificate generation failed for customer: {}&quot;, customerId, e);</span>
+<span class="nc" id="L118">                return CompletableFuture.failedFuture(e);</span>
+            }
+        }
+    
+        @Async(&quot;certificateGenerationExecutor&quot;)
+        @Transactional
+        public CompletableFuture&lt;List&lt;CertificateDTO&gt;&gt; generateBatchCertificates(
+                Long customerId, CertificateBatchRequest batchRequest) {
+        
+<span class="nc" id="L127">            log.info(&quot;Batch certificate generation started for customer: {}, count: {}&quot;, </span>
+<span class="nc" id="L128">                customerId, batchRequest.getCertificates().size());</span>
+        
+            try {
+<span class="nc" id="L131">                Template template = templateRepository.findByIdAndCustomerId(</span>
+<span class="nc" id="L132">                    batchRequest.getTemplateId(), customerId</span>
+<span class="nc" id="L133">                ).orElseThrow(() -&gt; new AccessDeniedException(&quot;Template not found or access denied&quot;));</span>
+            
+<span class="nc" id="L135">                Customer customer = customerRepository.findById(customerId)</span>
+<span class="nc" id="L136">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Customer not found&quot;));</span>
+            
+<span class="nc" id="L138">                List&lt;Certificate&gt; certificates = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L139">                int successCount = 0;</span>
+<span class="nc" id="L140">                int failCount = 0;</span>
+            
+<span class="nc bnc" id="L142" title="All 2 branches missed.">                for (GenerateCertificateRequest req : batchRequest.getCertificates()) {</span>
+                    try {
+<span class="nc" id="L144">                        String uniqueId = UUID.randomUUID().toString();</span>
+<span class="nc" id="L145">                        String signature = signatureService.sign(uniqueId, req.getData());</span>
+<span class="nc" id="L146">                        String qrCode = pdfGenerationService.generateQRCode(uniqueId, customerId, signature);</span>
+<span class="nc" id="L147">                        String filePath = pdfGenerationService.generateCertificatePdf(</span>
+<span class="nc" id="L148">                            template, req.getData(), uniqueId, qrCode</span>
+                        );
+                    
+<span class="nc" id="L151">                        Certificate cert = Certificate.builder()</span>
+<span class="nc" id="L152">                            .uniqueId(uniqueId)</span>
+<span class="nc" id="L153">                            .customer(customer)</span>
+<span class="nc" id="L154">                            .template(template)</span>
+<span class="nc" id="L155">                            .filePath(filePath)</span>
+<span class="nc" id="L156">                            .certificateData(serializeData(req.getData()))</span>
+<span class="nc" id="L157">                            .recipientName(req.getRecipientName())</span>
+<span class="nc" id="L158">                            .recipientEmail(req.getRecipientEmail())</span>
+<span class="nc" id="L159">                            .digitalSignature(signature)</span>
+<span class="nc" id="L160">                            .signatureKeyId(signatureService.getCurrentKeyId())</span>
+<span class="nc" id="L161">                            .qrCodeData(qrCode)</span>
+<span class="nc" id="L162">                            .status(Certificate.CertificateStatus.GENERATED)</span>
+<span class="nc" id="L163">                            .downloadCount(0)</span>
+<span class="nc" id="L164">                            .build();</span>
+                    
+<span class="nc" id="L166">                        certificates.add(cert);</span>
+<span class="nc" id="L167">                        successCount++;</span>
+<span class="nc" id="L168">                    } catch (IOException e) {</span>
+<span class="nc" id="L169">                        log.error(&quot;Failed to generate certificate in batch for recipient: {}&quot;, </span>
+<span class="nc" id="L170">                            req.getRecipientName(), e);</span>
+<span class="nc" id="L171">                        failCount++;</span>
+<span class="nc" id="L172">                    }</span>
+<span class="nc" id="L173">                }</span>
+            
+                // Batch save (single database transaction)
+<span class="nc" id="L176">                List&lt;Certificate&gt; saved = certificateRepository.saveAll(certificates);</span>
+            
+<span class="nc" id="L178">                log.info(&quot;Batch certificate generation completed. Success: {}, Failed: {}&quot;, </span>
+<span class="nc" id="L179">                    successCount, failCount);</span>
+            
+                // Batch audit log
+                com.seccertificate.certificateservice.entity.AuditLog batchAudit = 
+<span class="nc" id="L183">                    com.seccertificate.certificateservice.entity.AuditLog.builder()</span>
+<span class="nc" id="L184">                        .customerId(customer.getId())</span>
+<span class="nc" id="L185">                        .action(&quot;GENERATE_CERTIFICATE_BATCH&quot;)</span>
+<span class="nc" id="L186">                        .entityType(&quot;CERTIFICATE&quot;)</span>
+<span class="nc" id="L187">                        .entityId(template.getId())</span>
+<span class="nc" id="L188">                        .details(String.format(&quot;{\&quot;total\&quot;:%d,\&quot;success\&quot;:%d,\&quot;failed\&quot;:%d}&quot;, </span>
+<span class="nc" id="L189">                            batchRequest.getCertificates().size(), successCount, failCount))</span>
+<span class="nc" id="L190">                        .build();</span>
+<span class="nc" id="L191">                auditLogRepository.save(batchAudit);</span>
+            
+<span class="nc" id="L193">                return CompletableFuture.completedFuture(</span>
+<span class="nc" id="L194">                    saved.stream().map(this::mapToDTO).collect(Collectors.toList())</span>
+                );
+<span class="nc" id="L196">            } catch (Exception e) {</span>
+<span class="nc" id="L197">                log.error(&quot;Batch certificate generation failed for customer: {}&quot;, customerId, e);</span>
+<span class="nc" id="L198">                return CompletableFuture.failedFuture(e);</span>
+            }
+        }
+    
+    @Transactional(readOnly = true)
+    public CertificateDTO getCertificateById(Long customerId, Long certificateId) {
+<span class="nc" id="L204">        Certificate certificate = certificateRepository.findByIdAndCustomerId(certificateId, customerId)</span>
+<span class="nc" id="L205">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Certificate not found or access denied&quot;));</span>
+<span class="nc" id="L206">        return mapToDTO(certificate);</span>
+    }
+    
+    @Transactional(readOnly = true)
+    public CertificateDTO getCertificateByUniqueId(Long customerId, String uniqueId) {
+<span class="nc" id="L211">        Certificate certificate = certificateRepository.findByUniqueIdAndCustomerId(uniqueId, customerId)</span>
+<span class="nc" id="L212">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Certificate not found or access denied&quot;));</span>
+<span class="nc" id="L213">        return mapToDTO(certificate);</span>
+    }
+    
+    @Transactional(readOnly = true)
+    public List&lt;CertificateDTO&gt; getCertificatesByCustomerId(Long customerId) {
+<span class="nc" id="L218">        return certificateRepository.findByCustomerId(customerId).stream()</span>
+<span class="nc" id="L219">                .map(this::mapToDTO)</span>
+<span class="nc" id="L220">                .collect(Collectors.toList());</span>
+    }
+    
+    @Transactional
+    public byte[] downloadCertificate(Long customerId, String uniqueId) throws IOException {
+<span class="nc" id="L225">        Certificate certificate = certificateRepository.findByUniqueIdAndCustomerId(uniqueId, customerId)</span>
+<span class="nc" id="L226">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Certificate not found or access denied&quot;));</span>
+        
+        // Update download statistics
+<span class="nc" id="L229">        certificate.setDownloadCount(certificate.getDownloadCount() + 1);</span>
+<span class="nc" id="L230">        certificate.setDownloadedAt(LocalDateTime.now());</span>
+<span class="nc" id="L231">        certificate.setStatus(Certificate.CertificateStatus.DOWNLOADED);</span>
+<span class="nc" id="L232">        certificateRepository.save(certificate);</span>
+
+        // Audit log: certificate downloaded
+<span class="nc" id="L235">        com.seccertificate.certificateservice.entity.AuditLog downloadAudit = com.seccertificate.certificateservice.entity.AuditLog.builder()</span>
+<span class="nc" id="L236">                .customerId(certificate.getCustomer().getId())</span>
+<span class="nc" id="L237">                .action(&quot;DOWNLOAD_CERTIFICATE&quot;)</span>
+<span class="nc" id="L238">                .entityType(&quot;CERTIFICATE&quot;)</span>
+<span class="nc" id="L239">                .entityId(certificate.getId())</span>
+<span class="nc" id="L240">                .details(&quot;{\&quot;uniqueId\&quot;:\&quot;&quot; + certificate.getUniqueId() + &quot;\&quot;}&quot;)</span>
+<span class="nc" id="L241">                .build();</span>
+<span class="nc" id="L242">        auditLogRepository.save(downloadAudit);</span>
+
+<span class="nc" id="L244">        return pdfGenerationService.readCertificateFile(certificate.getFilePath());</span>
+    }
+    
+    @Transactional(readOnly = true)
+    public boolean verifyCertificate(String uniqueId, String digitalSignature) {
+<span class="fc" id="L249">        Certificate certificate = certificateRepository.findByUniqueId(uniqueId)</span>
+<span class="fc" id="L250">                .orElse(null);</span>
+        
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        if (certificate == null) {</span>
+<span class="fc" id="L253">            return false;</span>
+        }
+
+        // Recompute signature from stored certificate data to verify integrity
+        try {
+<span class="fc" id="L258">            Map&lt;String, String&gt; storedData = objectMapper.readValue(certificate.getCertificateData(), new TypeReference&lt;&gt;() {});</span>
+<span class="fc" id="L259">            return signatureService.verify(uniqueId, storedData, digitalSignature);</span>
+<span class="nc" id="L260">        } catch (IOException e) {</span>
+<span class="nc" id="L261">            return false;</span>
+        }
+    }
+    
+    private String serializeData(Object data) {
+        try {
+<span class="nc" id="L267">            return objectMapper.writeValueAsString(data);</span>
+<span class="nc" id="L268">        } catch (JsonProcessingException e) {</span>
+<span class="nc" id="L269">            throw new RuntimeException(&quot;Error serializing certificate data&quot;, e);</span>
+        }
+    }
+    
+    private CertificateDTO mapToDTO(Certificate certificate) {
+<span class="nc" id="L274">        return CertificateDTO.builder()</span>
+<span class="nc" id="L275">                .id(certificate.getId())</span>
+<span class="nc" id="L276">                .uniqueId(certificate.getUniqueId())</span>
+<span class="nc" id="L277">                .customerId(certificate.getCustomer().getId())</span>
+<span class="nc" id="L278">                .templateId(certificate.getTemplate().getId())</span>
+<span class="nc" id="L279">                .templateName(certificate.getTemplate().getName())</span>
+<span class="nc" id="L280">                .recipientName(certificate.getRecipientName())</span>
+<span class="nc" id="L281">                .recipientEmail(certificate.getRecipientEmail())</span>
+<span class="nc" id="L282">                .filePath(certificate.getFilePath())</span>
+<span class="nc" id="L283">                .downloadUrl(&quot;/api/certificates/&quot; + certificate.getUniqueId() + &quot;/download&quot;)</span>
+<span class="nc" id="L284">                .digitalSignature(certificate.getDigitalSignature())</span>
+<span class="nc" id="L285">                .qrCodeData(certificate.getQrCodeData())</span>
+<span class="nc" id="L286">                .status(certificate.getStatus().name())</span>
+<span class="nc" id="L287">                .createdAt(certificate.getCreatedAt())</span>
+<span class="nc" id="L288">                .downloadedAt(certificate.getDownloadedAt())</span>
+<span class="nc" id="L289">                .downloadCount(certificate.getDownloadCount())</span>
+<span class="nc" id="L290">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

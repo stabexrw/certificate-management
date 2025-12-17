@@ -2,6 +2,7 @@ package com.seccertificate.certificateservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.seccertificate.certificateservice.dto.CertificateBatchRequest;
 import com.seccertificate.certificateservice.dto.CertificateDTO;
 import com.seccertificate.certificateservice.dto.GenerateCertificateRequest;
 import com.seccertificate.certificateservice.entity.Certificate;
@@ -12,20 +13,25 @@ import com.seccertificate.certificateservice.repository.CertificateRepository;
 import com.seccertificate.certificateservice.repository.CustomerRepository;
 import com.seccertificate.certificateservice.repository.TemplateRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CertificateService {
     
     private final CertificateRepository certificateRepository;
@@ -98,6 +104,100 @@ public class CertificateService {
             throw new RuntimeException("Failed to generate certificate PDF", e);
         }
     }
+    
+        @Async("certificateGenerationExecutor")
+        @Transactional
+        public CompletableFuture<CertificateDTO> generateCertificateAsync(Long customerId, GenerateCertificateRequest request) {
+            try {
+                log.info("Async certificate generation started for customer: {}", customerId);
+                CertificateDTO result = generateCertificate(customerId, request);
+                log.info("Async certificate generation completed: {}", result.getUniqueId());
+                return CompletableFuture.completedFuture(result);
+            } catch (Exception e) {
+                log.error("Async certificate generation failed for customer: {}", customerId, e);
+                return CompletableFuture.failedFuture(e);
+            }
+        }
+    
+        @Async("certificateGenerationExecutor")
+        @Transactional
+        public CompletableFuture<List<CertificateDTO>> generateBatchCertificates(
+                Long customerId, CertificateBatchRequest batchRequest) {
+        
+            log.info("Batch certificate generation started for customer: {}, count: {}", 
+                customerId, batchRequest.getCertificates().size());
+        
+            try {
+                Template template = templateRepository.findByIdAndCustomerId(
+                    batchRequest.getTemplateId(), customerId
+                ).orElseThrow(() -> new AccessDeniedException("Template not found or access denied"));
+            
+                Customer customer = customerRepository.findById(customerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
+            
+                List<Certificate> certificates = new ArrayList<>();
+                int successCount = 0;
+                int failCount = 0;
+            
+                for (GenerateCertificateRequest req : batchRequest.getCertificates()) {
+                    try {
+                        String uniqueId = UUID.randomUUID().toString();
+                        String signature = signatureService.sign(uniqueId, req.getData());
+                        String qrCode = pdfGenerationService.generateQRCode(uniqueId, customerId, signature);
+                        String filePath = pdfGenerationService.generateCertificatePdf(
+                            template, req.getData(), uniqueId, qrCode
+                        );
+                    
+                        Certificate cert = Certificate.builder()
+                            .uniqueId(uniqueId)
+                            .customer(customer)
+                            .template(template)
+                            .filePath(filePath)
+                            .certificateData(serializeData(req.getData()))
+                            .recipientName(req.getRecipientName())
+                            .recipientEmail(req.getRecipientEmail())
+                            .digitalSignature(signature)
+                            .signatureKeyId(signatureService.getCurrentKeyId())
+                            .qrCodeData(qrCode)
+                            .status(Certificate.CertificateStatus.GENERATED)
+                            .downloadCount(0)
+                            .build();
+                    
+                        certificates.add(cert);
+                        successCount++;
+                    } catch (IOException e) {
+                        log.error("Failed to generate certificate in batch for recipient: {}", 
+                            req.getRecipientName(), e);
+                        failCount++;
+                    }
+                }
+            
+                // Batch save (single database transaction)
+                List<Certificate> saved = certificateRepository.saveAll(certificates);
+            
+                log.info("Batch certificate generation completed. Success: {}, Failed: {}", 
+                    successCount, failCount);
+            
+                // Batch audit log
+                com.seccertificate.certificateservice.entity.AuditLog batchAudit = 
+                    com.seccertificate.certificateservice.entity.AuditLog.builder()
+                        .customerId(customer.getId())
+                        .action("GENERATE_CERTIFICATE_BATCH")
+                        .entityType("CERTIFICATE")
+                        .entityId(template.getId())
+                        .details(String.format("{\"total\":%d,\"success\":%d,\"failed\":%d}", 
+                            batchRequest.getCertificates().size(), successCount, failCount))
+                        .build();
+                auditLogRepository.save(batchAudit);
+            
+                return CompletableFuture.completedFuture(
+                    saved.stream().map(this::mapToDTO).collect(Collectors.toList())
+                );
+            } catch (Exception e) {
+                log.error("Batch certificate generation failed for customer: {}", customerId, e);
+                return CompletableFuture.failedFuture(e);
+            }
+        }
     
     @Transactional(readOnly = true)
     public CertificateDTO getCertificateById(Long customerId, Long certificateId) {

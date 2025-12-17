@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Certificate.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">certificate-service</a> &gt; <a href="index.source.html" class="el_package">com.seccertificate.certificateservice.entity</a> &gt; <span class="el_source">Certificate.java</span></div><h1>Certificate.java</h1><pre class="source lang-java linenums">package com.seccertificate.certificateservice.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = &quot;certificates&quot;, indexes = {
+    @Index(name = &quot;idx_cert_customer&quot;, columnList = &quot;customer_id&quot;),
+    @Index(name = &quot;idx_cert_template&quot;, columnList = &quot;template_id&quot;),
+    @Index(name = &quot;idx_cert_unique_id&quot;, columnList = &quot;uniqueId&quot;),
+    @Index(name = &quot;idx_cert_created&quot;, columnList = &quot;createdAt&quot;)
+})
+@Getter
+<span class="nc" id="L17">@Setter</span>
+<span class="nc" id="L18">@NoArgsConstructor</span>
+<span class="fc" id="L19">@AllArgsConstructor</span>
+<span class="pc bpc" id="L20" title="2 of 4 branches missed.">@Builder</span>
+public class Certificate {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+<span class="nc" id="L25">    private Long id;</span>
+    
+    @Column(unique = true, nullable = false, length = 100)
+<span class="nc" id="L28">    private String uniqueId; // UUID for verification</span>
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;customer_id&quot;, nullable = false)
+<span class="nc" id="L32">    private Customer customer;</span>
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;template_id&quot;, nullable = false)
+<span class="nc" id="L36">    private Template template;</span>
+    
+    @Column(nullable = false, length = 500)
+<span class="nc" id="L39">    private String filePath; // Path to PDF file</span>
+    
+    @Column(columnDefinition = &quot;TEXT&quot;)
+<span class="fc" id="L42">    private String certificateData; // JSON of actual data used</span>
+    
+    @Column(length = 200)
+<span class="nc" id="L45">    private String recipientName;</span>
+    
+    @Column(length = 200)
+<span class="nc" id="L48">    private String recipientEmail;</span>
+    
+    @Column(nullable = false)
+<span class="nc" id="L51">    private String digitalSignature; // SHA-256 hash for verification</span>
+    
+    @Column(length = 40)
+<span class="nc" id="L54">    private String signatureKeyId;</span>
+
+    @Column(length = 500)
+<span class="nc" id="L57">    private String qrCodeData; // QR code for verification</span>
+    
+    @Column(length = 20)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+<span class="nc" id="L62">    private CertificateStatus status = CertificateStatus.GENERATED;</span>
+    
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+<span class="nc" id="L66">    private LocalDateTime createdAt;</span>
+    
+    @Column
+<span class="nc" id="L69">    private LocalDateTime downloadedAt;</span>
+    
+    @Column
+    @Builder.Default
+<span class="pc" id="L73">    private Integer downloadCount = 0;</span>
+    
+<span class="fc" id="L75">    public enum CertificateStatus {</span>
+<span class="fc" id="L76">        GENERATED, DOWNLOADED, VERIFIED, REVOKED</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

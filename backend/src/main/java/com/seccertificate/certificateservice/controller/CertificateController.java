@@ -1,6 +1,8 @@
 package com.seccertificate.certificateservice.controller;
 
 import com.seccertificate.certificateservice.dto.ApiResponse;
+import com.seccertificate.certificateservice.dto.BatchGenerationResponse;
+import com.seccertificate.certificateservice.dto.CertificateBatchRequest;
 import com.seccertificate.certificateservice.dto.CertificateDTO;
 import com.seccertificate.certificateservice.dto.GenerateCertificateRequest;
 import com.seccertificate.certificateservice.security.CustomUserDetails;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/certificates")
@@ -31,6 +34,42 @@ public class CertificateController {
         CertificateDTO certificate = certificateService.generateCertificate(userDetails.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("Certificate generated successfully", certificate));
     }
+    
+        @PostMapping("/generate/async")
+        public ResponseEntity<ApiResponse<String>> generateCertificateAsync(
+                @AuthenticationPrincipal CustomUserDetails userDetails,
+                @Valid @RequestBody GenerateCertificateRequest request) {
+        
+            certificateService.generateCertificateAsync(userDetails.getId(), request);
+        
+            return ResponseEntity.accepted()
+                .body(ApiResponse.success("Certificate generation queued. You will be notified when complete."));
+        }
+    
+        @PostMapping("/generate/batch")
+        public ResponseEntity<ApiResponse<BatchGenerationResponse>> generateBatchCertificates(
+                @AuthenticationPrincipal CustomUserDetails userDetails,
+                @Valid @RequestBody CertificateBatchRequest batchRequest) {
+        
+            int count = batchRequest.getCertificates().size();
+            String batchId = UUID.randomUUID().toString();
+        
+            certificateService.generateBatchCertificates(userDetails.getId(), batchRequest);
+        
+            // Calculate estimated completion time (rough estimate: 1 second per certificate with 50 parallel threads)
+            int estimatedSeconds = (count / 50) + 1;
+        
+            BatchGenerationResponse response = BatchGenerationResponse.builder()
+                .totalRequested(count)
+                .successfullyQueued(count)
+                .batchId(batchId)
+                .message(String.format("Batch of %d certificates queued for generation", count))
+                .estimatedCompletionTime(String.format("%d seconds", estimatedSeconds))
+                .build();
+        
+            return ResponseEntity.accepted()
+                .body(ApiResponse.success("Batch generation started", response));
+        }
     
     @PostMapping("/simulate")
     public ResponseEntity<ApiResponse<String>> simulateCertificate(
