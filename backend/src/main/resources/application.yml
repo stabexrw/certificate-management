@@ -8,8 +8,9 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
-      connection-timeout: 10000
-      initialization-fail-timeout: 0
+      # Increase timeout for initial connection to Supabase
+      connection-timeout: 30000
+      initialization-fail-timeout: -1
       maximum-pool-size: 5
       minimum-idle: 1
     
