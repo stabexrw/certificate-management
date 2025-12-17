@@ -11,12 +11,11 @@ services:
         value: production
       - key: SERVER_PORT
         value: 8080
-      # Add these from your external Postgres provider (Supabase/Railway):
-      # - key: SPRING_DATASOURCE_URL
-      #   value: jdbc:postgresql://<host>:<port>/<database>?sslmode=require
-      # - key: SPRING_DATASOURCE_USERNAME
-      #   value: <user>
-      # - key: SPRING_DATASOURCE_PASSWORD
-      #   value: <password>
-      # - key: CORS_ALLOWED_ORIGINS
-      #   value: https://spectacular-cucurucho-793843.netlify.app
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://aws-0-us-west-1.pooler.supabase.com:6543/postgres?sslmode=require
+      - key: SPRING_DATASOURCE_USERNAME
+        value: postgres
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: ${DB_PASSWORD}
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://spectacular-cucurucho-793843.netlify.app
