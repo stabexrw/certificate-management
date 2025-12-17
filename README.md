@@ -1,6 +1,6 @@
 # Certificate Management System
 
-A full-stack web application for managing and generating digital certificates with a rich WYSIWYG editor, authentication, and database persistence.
+A full-stack web application for managing and generating digital certificates with a rich  editor, authentication, and database persistence.
 
 ## 🚀 Live Demo
 
@@ -16,7 +16,6 @@ A full-stack web application for managing and generating digital certificates wi
 - ✅ Full-featured editor with:
   - Source code editing
   - HTML embed support
-  - Mention autocomplete for placeholders
   - Predefined styles system
   - Image insertion & resizing
   - Table support
@@ -365,7 +364,7 @@ Contributions welcome! Please follow these steps:
 
 For issues and questions:
 - GitHub Issues: https://github.com/stabexrw/certificate-management/issues
-- Email: support@certificate-service.com
+- Email: pshema29@gmail.com
 
 ## 🎯 Roadmap
 

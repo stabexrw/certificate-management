@@ -313,8 +313,6 @@ npm install
 
 # Clear Angular cache
 ng cache clean
-📝 License
-This project is licensed under the MIT License.
 👥 Contributors
 
 SHEMA TUYIZERE PATRICK - Initial work
